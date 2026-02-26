@@ -27,10 +27,15 @@ La API gestiona el control de accesos, realiza cálculos de tiempos de sesión y
 ---
 
 ## Paso 1 — Levantar SQL Server en Docker
+Dentro de la terminal CMD ejecuta el siguiente comando para iniciar un contenedor con SQL Server:
+NOTA: Dockers tiene que estar corriendo para que este comando funcione.
 
 ```bash
 docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourStrong!Passw0rd" -p 1433:1433 --name sqlserver -d mcr.microsoft.com/mssql/server:2022-latest
 ```
+Una vez ejecutado, el contenedor iniciará SQL Server y quedará listo para aceptar conexiones.
+
+Dentro del SSMS o Azure Data Studio, puedes conectarte usando las siguientes credenciales:
 
 Credenciales de conexión:
 
@@ -42,7 +47,7 @@ Credenciales de conexión:
 
 ---
 
-## Paso 2 — Configurar la Cadena de Conexión
+## Paso 2 — Configurar la Cadena de Conexión (.NET)
 
 En el archivo `appsettings.json`, asegúrate de que el bloque `ConnectionStrings` quede así:
 
@@ -54,32 +59,33 @@ En el archivo `appsettings.json`, asegúrate de que el bloque `ConnectionStrings
 }
 ```
 
+Esto configura la cadena de conexión para que la API pueda comunicarse con el SQL Server que levantaste en Docker. El parámetro `TrustServerCertificate=True` es necesario para evitar errores de certificado en entornos locales.
+
 ---
 
-## ▶️ Paso 3 — Ejecutar el Proyecto
+## Paso 3 — Ejecutar el Proyecto
 
+### Opción A — Línea de comandos
 ```bash
-# Restaurar dependencias
-dotnet restore
-
-# Compilar
-dotnet build
-
-# Ejecutar (aplica migraciones y pobla la BD automáticamente)
-dotnet run
+git clone https://github.com/Calzada-ds/TestTecnico-Nuxiba
+cd TestNuxibaAPI
+dotnet run --project TestNuxibaAPI
 ```
+> Al ejecutar, el proyecto automáticamente aplica migraciones y pobla la BD desde el Excel.
+
+### Opción B — Visual Studio
+1. Abre `TestNuxibaAPI.sln`
+2. Presiona `F5` o el botón ▶️ **Run**
 
 La API quedará disponible en:
-- `https://localhost:7194`
-- `http://localhost:5194`
+- https://localhost:7194/swagger ← interfaz visual para probar endpoints
+- https://localhost:7194/api/logins
 
----
-
-## 🔄 Flujo de Automatización al dar Play
+## Flujo de Automatización al dar Play
 
 El proyecto es **autoconfigurable e idempotente**. Al iniciar, ejecuta automáticamente:
 
-### ✅ 1. Migraciones Automáticas
+### 1. Migraciones Automáticas
 ```csharp
 context.Database.Migrate();
 ```
@@ -88,17 +94,17 @@ Crea las siguientes tablas si no existen:
 - `ccloglogin`
 - `ccRIACat_Areas`
 
-### ✅ 2. Poblado desde Excel
+### 2. Poblado desde Excel
 Usa `CCenterRIA.xlsx` (incluido en el proyecto) para llenar las tablas automáticamente mediante MiniExcel.
 
 > ⚠️ El archivo está configurado con `CopyToOutputDirectory = Always` en el `.csproj` para que siempre esté disponible al compilar.
 
-### ✅ 3. Protección contra Duplicados
+### 3. Protección contra Duplicados
 Valida con `.Any()` antes de insertar. Si la BD ya tiene datos, no los vuelve a cargar.
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 NuxibaPracticeAPI/
@@ -114,21 +120,31 @@ NuxibaPracticeAPI/
 │   ├── Area.cs
 │   ├── Login.cs
 │   └── User.cs
+├── SQLScripts/
+│   ├── 01_usuario_mas_logueado.sql
+│   ├── 02_usuario_menos_logueado.sql
+│   └── 03_promedio_por_mes.sql
 ├── Migrations/                    ← Migraciones EF Core (commiteadas)
-├── Tests/                         ← Pruebas unitarias xUnit
 ├── CCenterRIA.xlsx                ← Datos iniciales
 ├── appsettings.json
 └── Program.cs
+TestsNuxibaAPI.Tests               ← Pruebas unitarias xUnit
+├── LoginsControllerTest.cs        ← Pruebas unitarias 
+
 ```
 
 ---
 
-## 🏁 Ejercicio 1 — Endpoints de la API
+## Ejercicio 1 — Endpoints de la API
 
 ### Base URL
 ```
-https://localhost:7194/api
+https://localhost:7128/api
 ```
+
+> Swagger UI disponible en: `https://localhost:7128/swagger/index.html`
+
+---
 
 ### `GET /api/logins`
 Devuelve todos los registros de logins y logouts ordenados por fecha descendente.
@@ -211,7 +227,7 @@ Elimina un registro por ID.
 
 ---
 
-### `GET /api/logins/export-csv`
+### `GET /api/logins/exportar-horas-csv`
 Descarga un archivo CSV con el resumen de horas trabajadas por usuario.
 
 **Respuesta exitosa `200 OK`:** archivo `.csv` descargable.
@@ -224,39 +240,17 @@ Descarga un archivo CSV con el resumen de horas trabajadas por usuario.
 
 ---
 
-## 📊 Ejercicio 2 — Consultas SQL Server
+## Ejercicio 2 — Consultas SQL Server
+
+Los scripts completos están en la carpeta [`/SQLScripts`]
+
+---
 
 ### Query 1 — Usuario con MÁS tiempo logueado
+[`SQL/01_usuario_mas_logueado.sql`](./SQL/01_usuario_mas_logueado.sql)
 
-```sql
-WITH Sesiones AS (
-    SELECT 
-        User_id,
-        fecha                                                    AS Inicio,
-        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha) AS Fin,
-        TipoMov,
-        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha) AS SigMov
-    FROM ccloglogin
-),
-CalculoSegundos AS (
-    SELECT 
-        User_id,
-        SUM(DATEDIFF(SECOND, Inicio, Fin)) AS TotalSegundos
-    FROM Sesiones
-    WHERE TipoMov = 1 AND SigMov = 0  -- Pares Login → Logout válidos
-    GROUP BY User_id
-)
-SELECT TOP 1
-    User_id,
-    COALESCE(CONCAT_WS(', ',
-        NULLIF(CAST(TotalSegundos / 86400          AS VARCHAR) + ' días',     '0 días'),
-        NULLIF(CAST((TotalSegundos % 86400) / 3600 AS VARCHAR) + ' horas',    '0 horas'),
-        NULLIF(CAST((TotalSegundos % 3600)  / 60   AS VARCHAR) + ' minutos',  '0 minutos'),
-        NULLIF(CAST(TotalSegundos % 60             AS VARCHAR) + ' segundos', '0 segundos')
-    ), '0 segundos') AS [Tiempo total]
-FROM CalculoSegundos
-ORDER BY TotalSegundos DESC;
-```
+Usa `LEAD()` con `PARTITION BY User_id` para emparejar cada Login con su Logout
+siguiente y suma el tiempo total por usuario, mostrando el resultado en formato legible.
 
 **Resultado esperado:**
 ```
@@ -266,36 +260,10 @@ User_id: 92 | Tiempo total: 361 días, 12 horas, 51 minutos, 8 segundos
 ---
 
 ### Query 2 — Usuario con MENOS tiempo logueado
+[`SQL/02_usuario_menos_logueado.sql`](./SQL/02_usuario_menos_logueado.sql)
 
-```sql
-WITH Sesiones AS (
-    SELECT 
-        User_id,
-        fecha                                                    AS Inicio,
-        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha) AS Fin,
-        TipoMov,
-        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha) AS SigMov
-    FROM ccloglogin
-),
-CalculoSegundos AS (
-    SELECT 
-        User_id,
-        SUM(DATEDIFF(SECOND, Inicio, Fin)) AS TotalSegundos
-    FROM Sesiones
-    WHERE TipoMov = 1 AND SigMov = 0
-    GROUP BY User_id
-)
-SELECT TOP 1
-    User_id,
-    COALESCE(CONCAT_WS(', ',
-        NULLIF(CAST(TotalSegundos / 86400          AS VARCHAR) + ' días',     '0 días'),
-        NULLIF(CAST((TotalSegundos % 86400) / 3600 AS VARCHAR) + ' horas',    '0 horas'),
-        NULLIF(CAST((TotalSegundos % 3600)  / 60   AS VARCHAR) + ' minutos',  '0 minutos'),
-        NULLIF(CAST(TotalSegundos % 60             AS VARCHAR) + ' segundos', '0 segundos')
-    ), '0 segundos') AS [Tiempo total]
-FROM CalculoSegundos
-ORDER BY TotalSegundos ASC;
-```
+Misma lógica que la Query 1 pero ordenando de forma ascendente para obtener
+el usuario con menor tiempo acumulado de sesión.
 
 **Resultado esperado:**
 ```
@@ -305,40 +273,9 @@ User_id: 90 | Tiempo total: 244 días, 43 minutos, 15 segundos
 ---
 
 ### Query 3 — Promedio de logueo por mes
+[`SQL/03_promedio_por_mes.sql`](./SQL/03_promedio_por_mes.sql)
 
-```sql
-SET LANGUAGE Spanish;
-WITH Sesiones AS (
-    SELECT 
-        User_id,
-        fecha                                                    AS Inicio,
-        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha) AS Fin,
-        TipoMov,
-        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha) AS SigMov
-    FROM ccloglogin
-),
-Promedios AS (
-    SELECT 
-        User_id,
-        YEAR(Inicio)            AS Anio,
-        MONTH(Inicio)           AS MesNum,
-        DATENAME(MONTH, Inicio) AS MesNombre,
-        AVG(CAST(DATEDIFF(SECOND, Inicio, Fin) AS BIGINT)) AS TotalSegundos
-    FROM Sesiones
-    WHERE TipoMov = 1 AND SigMov = 0
-    GROUP BY User_id, YEAR(Inicio), MONTH(Inicio), DATENAME(MONTH, Inicio)
-)
-SELECT
-    CONCAT('Usuario ', User_id, ' en ', MesNombre, ' ', Anio, ':') AS Detalle,
-    COALESCE(NULLIF(CONCAT_WS(', ',
-        NULLIF(CAST(TotalSegundos / 86400          AS VARCHAR) + ' días',     '0 días'),
-        NULLIF(CAST((TotalSegundos % 86400) / 3600 AS VARCHAR) + ' horas',    '0 horas'),
-        NULLIF(CAST((TotalSegundos % 3600)  / 60   AS VARCHAR) + ' minutos',  '0 minutos'),
-        NULLIF(CAST(TotalSegundos % 60             AS VARCHAR) + ' segundos', '0 segundos')
-    ), ''), '0 segundos') AS [Promedio de logueo]
-FROM Promedios
-ORDER BY Anio, MesNum, User_id;
-```
+Calcula el promedio de duración de sesión por usuario agrupado por mes y año.
 
 **Resultado esperado:**
 ```
@@ -347,23 +284,23 @@ Usuario 70 en enero 2023: 3 días, 14 horas, 1 minuto, 16 segundos
 
 ---
 
-## 📥 Ejercicio 3 — Descarga del CSV
+## Ejercicio 3 — Descarga del CSV
 
 ### Desde el navegador
 ```
-https://localhost:7194/api/logins/export-csv
+https://localhost:7128/api/logins/exportar-horas-csv
 ```
 
 ### Desde curl
 ```bash
-curl -k -o reporte.csv https://localhost:7194/api/logins/export-csv
+curl -k -o reporte.csv https://localhost:7128/api/logins/exportar-horas-csv
 ```
 
 ### Desde Postman
 
 1. Abre Postman y crea una nueva request
 2. Selecciona método `GET`
-3. URL: `https://localhost:7194/api/logins/export-csv`
+3. URL: `https://localhost:7128/api/logins/exportar-horas-csv`
 4. En la pestaña **Settings**, desactiva *SSL certificate verification* (para entornos locales)
 5. Haz clic en **Send**
 6. En la respuesta, haz clic en **Save Response → Save to a file** y guárdalo como `reporte.csv`
@@ -376,19 +313,16 @@ jperez,Juan Pérez López,Soporte,361 días 12 horas 51 minutos
 
 ---
 
-## 🧪 Pruebas Unitarias
+## Pruebas Unitarias
 
 Las pruebas cubren los siguientes escenarios del `LoginsController`:
 
 | Prueba | Descripción |
 |---|---|
-| `GetLogins_ReturnsOk` | Verifica que el GET devuelve `200 OK` con lista |
-| `PostLogin_ValidData_ReturnsCreated` | POST con datos válidos devuelve `201 Created` |
-| `PostLogin_InvalidDate_ReturnsBadRequest` | Fecha vacía devuelve `400` |
-| `PostLogin_UserNotFound_ReturnsBadRequest` | `User_id` inexistente devuelve `400` |
-| `PostLogin_DuplicateSequence_ReturnsBadRequest` | Dos logins seguidos devuelve `400` |
-| `PutLogin_NotFound_ReturnsNotFound` | PUT con ID inexistente devuelve `404` |
-| `DeleteLogin_NotFound_ReturnsNotFound` | DELETE con ID inexistente devuelve `404` |
+| `PostLogin_CuandoUsuarioYaTieneLoginActivo_RetornaBadRequest` | Dos logins seguidos devuelve `400` con mensaje "Error de secuencia" |
+| `PostLogin_CuandoUsuarioNoExiste_RetornaBadRequest` | `User_id` inexistente devuelve `400` con mensaje "no existe" |
+
+> Las pruebas usan una base de datos **In-Memory** (via `UseInMemoryDatabase`) para no depender de SQL Server, lo que las hace rápidas y aisladas.
 
 ### Ejecutar las pruebas
 
@@ -410,14 +344,14 @@ dotnet test --logger "console;verbosity=detailed"
 
 ---
 
-## 🌐 Colección de Postman — Guía Completa
+## Colección de Postman — Guía Completa
 
 ### Configuración inicial
 
 1. Abre Postman
 2. Crea un nuevo **Environment** llamado `NuxibaLocal`
 3. Agrega la variable:
-   - `base_url` = `https://localhost:7194`
+   - `base_url` = `https://localhost:7128`
 4. En **Settings → General**, desactiva *SSL certificate verification*
 
 ---
@@ -511,7 +445,7 @@ dotnet test --logger "console;verbosity=detailed"
 | Campo | Valor |
 |---|---|
 | Método | `GET` |
-| URL | `{{base_url}}/api/logins/export-csv` |
+| URL | `{{base_url}}/api/logins/exportar-horas-csv` |
 | Body | ninguno |
 
 **Respuesta esperada:** `200 OK` con archivo CSV descargable
@@ -557,11 +491,13 @@ Respuesta esperada: `400 Bad Request` — *"El TipoMov debe ser 0 (Logout) o 1 (
 
 ---
 
-## 👤 Información del Candidato
+## Información del Candidato
 
 **Daniel Sebastian Calzada Guerrero**  
+55 4863 8608
+calzada.dsg@gmail.com
 Fecha de entrega: 2026-02-25
 
 ---
 
-🚀 Proyecto listo para evaluación técnica.
+Proyecto listo para evaluación técnica.

@@ -35,7 +35,6 @@
   <ItemGroup>
     <Folder Include="bin\Debug\net8.0\" />
     <Folder Include="bin\Release\net8.0\" />
-    <Folder Include="Data\" />
     <Folder Include="obj\Debug\net8.0\refint\" />
     <Folder Include="obj\Debug\net8.0\ref\" />
     <Folder Include="obj\Debug\net8.0\staticwebassets\" />
@@ -56,6 +55,12 @@
     <None Include="obj\TestNuxibaAPI.csproj.nuget.g.props" />
     <None Include="obj\TestNuxibaAPI.csproj.nuget.g.targets" />
     <None Include="TestNuxibaAPI.sln" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="CCenterRIA.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -7,22 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
-    <Compile Include="obj\Debug\net8.0\TestNuxibaAPI.AssemblyInfo.cs" />
-    <Compile Include="obj\Debug\net8.0\TestNuxibaAPI.GlobalUsings.g.cs" />
-    <Compile Include="obj\Release\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
-    <Compile Include="obj\Release\net8.0\TestNuxibaAPI.AssemblyInfo.cs" />
-    <Compile Include="obj\Release\net8.0\TestNuxibaAPI.GlobalUsings.g.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="obj\Debug\net8.0\rpswa.dswa.cache.json" />
-    <Content Include="obj\Debug\net8.0\staticwebassets.removed.txt" />
-    <Content Include="obj\project.assets.json" />
-    <Content Include="obj\TestNuxibaAPI.csproj.nuget.dgspec.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
       <PrivateAssets>all</PrivateAssets>
@@ -33,27 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="bin\Debug\net8.0\" />
-    <Folder Include="bin\Release\net8.0\" />
-    <Folder Include="obj\Debug\net8.0\refint\" />
-    <Folder Include="obj\Debug\net8.0\ref\" />
-    <Folder Include="obj\Debug\net8.0\staticwebassets\" />
-    <Folder Include="obj\Release\net8.0\refint\" />
-    <Folder Include="obj\Release\net8.0\ref\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="obj\Debug\net8.0\TestNuxibaAPI.AssemblyInfoInputs.cache" />
-    <None Include="obj\Debug\net8.0\TestNuxibaAPI.assets.cache" />
-    <None Include="obj\Debug\net8.0\TestNuxibaAPI.csproj.AssemblyReference.cache" />
-    <None Include="obj\Debug\net8.0\TestNuxibaAPI.GeneratedMSBuildEditorConfig.editorconfig" />
-    <None Include="obj\project.nuget.cache" />
-    <None Include="obj\Release\net8.0\TestNuxibaAPI.AssemblyInfoInputs.cache" />
-    <None Include="obj\Release\net8.0\TestNuxibaAPI.assets.cache" />
-    <None Include="obj\Release\net8.0\TestNuxibaAPI.csproj.AssemblyReference.cache" />
-    <None Include="obj\Release\net8.0\TestNuxibaAPI.GeneratedMSBuildEditorConfig.editorconfig" />
-    <None Include="obj\TestNuxibaAPI.csproj.nuget.g.props" />
-    <None Include="obj\TestNuxibaAPI.csproj.nuget.g.targets" />
     <None Include="TestNuxibaAPI.sln" />
   </ItemGroup>
 

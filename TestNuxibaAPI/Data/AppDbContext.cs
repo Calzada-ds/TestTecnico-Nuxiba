@@ -20,7 +20,7 @@ namespace TestNuxibaAPI.Data
             modelBuilder.Entity<User>().ToTable("ccUsers");
             modelBuilder.Entity<Login>().ToTable("ccloglogin");
 
-            modelBuilder.Entity<Area>().Property(a => a.Id).ValueGeneratedOnAdd();
+            modelBuilder.Entity<Area>().Property(a => a.IDArea).ValueGeneratedOnAdd();
             modelBuilder.Entity<User>().Property(u => u.User_id).ValueGeneratedNever();
             modelBuilder.Entity<Login>().Property(l => l.Id).ValueGeneratedOnAdd();
         }

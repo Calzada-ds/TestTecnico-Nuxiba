@@ -7,8 +7,9 @@ namespace TestNuxibaAPI.Models
     public class Area
     {
         [Key]
-        public int Id { get; set; } 
+        public int Id { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int IDArea { get; set; }
 
         [Required]

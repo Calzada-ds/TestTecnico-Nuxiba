@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace NuxibaPracticeAPI.DTOs
+namespace TestNuxibaAPI.DTOs
 {
     public class LoginCreateDTO
     {

@@ -1,4 +1,4 @@
-﻿namespace NuxibaPracticeAPI.DTOs
+﻿namespace TestNuxibaAPI.DTOs
 {
     public class LoginResponseDTO
     {

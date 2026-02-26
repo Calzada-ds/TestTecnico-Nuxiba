@@ -1,4 +1,6 @@
-﻿namespace TestNuxibaAPI.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TestNuxibaAPI.DTOs
 {
     public class LoginResponseDTO
     {

@@ -5,7 +5,7 @@ using TestNuxibaAPI.DTOs;
 using TestNuxibaAPI.Models;
 using System;
 
-namespace NuxibaPracticeAPI.Controllers
+namespace TestNuxibaAPI.Controllers
 {
     [Route("api/logins")]
     [ApiController]
@@ -157,7 +157,6 @@ namespace NuxibaPracticeAPI.Controllers
         }
 
         //Helpers
-
         private async Task<bool> LoginExistsAsync(int id)
         {
             return await _context.Logins.AnyAsync(e => e.Id == id);

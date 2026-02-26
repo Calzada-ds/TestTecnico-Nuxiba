@@ -161,7 +161,7 @@ namespace TestNuxibaAPI.Controllers
             return Ok(new { mensaje = $"El registro con ID {id} fue eliminado exitosamente de la base de datos." });
         }
 
-        /// Genera y descarga un reporte en CSV de las horas trabajadas por usuario.
+        //CSV
         [HttpGet("exportar-horas-csv")]
         public async Task<IActionResult> ExportarHorasCsv()
         {
@@ -172,45 +172,53 @@ namespace TestNuxibaAPI.Controllers
                 .ToListAsync();
 
             var sb = new StringBuilder();
-
             sb.AppendLine("Nombre de usuario,Nombre completo,Area,Total de horas trabajadas");
 
             foreach (var user in users)
             {
                 string nombreCompleto = $"{user.Nombres} {user.ApellidoPaterno} {user.ApellidoMaterno}".Trim();
-
                 double totalSegundos = 0;
                 DateTime? ultimoLogin = null;
 
                 var movimientos = user.Logins.OrderBy(l => l.fecha).ToList();
-
                 foreach (var mov in movimientos)
                 {
-                    if (mov.TipoMov == 1) 
+                    if (mov.TipoMov == 1)
                     {
                         ultimoLogin = mov.fecha;
                     }
-                    else if (mov.TipoMov == 0 && ultimoLogin.HasValue) 
+                    else if (mov.TipoMov == 0 && ultimoLogin.HasValue)
                     {
                         totalSegundos += (mov.fecha - ultimoLogin.Value).TotalSeconds;
-                        ultimoLogin = null; 
+                        ultimoLogin = null;
                     }
                 }
 
-                double totalHoras = totalSegundos / 3600.0;
+                // Formato legible días, horas, minutos, segundos
+                int dias = (int)totalSegundos / 86400;
+                int horas = ((int)totalSegundos % 86400) / 3600;
+                int minutos = ((int)totalSegundos % 3600) / 60;
+                int segundos = (int)totalSegundos % 60;
+
+                var partes = new List<string>();
+                if (dias > 0) partes.Add($"{dias} dias");
+                if (horas > 0) partes.Add($"{horas} horas");
+                if (minutos > 0) partes.Add($"{minutos} minutos");
+                if (segundos > 0) partes.Add($"{segundos} segundos");
+
+                string tiempoTotal = partes.Any() ? string.Join(", ", partes) : "0 segundos";
 
                 string csvLogin = $"\"{user.Login}\"";
                 string csvNombre = $"\"{nombreCompleto}\"";
                 string csvArea = $"\"{user.Area?.AreaName ?? "Sin Área"}\"";
 
-                string csvHoras = totalHoras.ToString("F2");
-
-                sb.AppendLine($"{csvLogin},{csvNombre},{csvArea},{csvHoras}");
+                sb.AppendLine($"{csvLogin},{csvNombre},{csvArea},\"{tiempoTotal}\"");
             }
 
-            var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+            var bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)
+    .GetBytes(sb.ToString());
 
-            return File(bytes, "text/csv", "Reporte_Horas_Trabajadas.csv");
+            return File(bytes, "text/csv; charset=utf-8", "Reporte_Horas_Trabajadas.csv");
         }
 
         //Helpers

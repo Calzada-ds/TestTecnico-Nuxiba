@@ -79,8 +79,8 @@ dotnet run --project TestNuxibaAPI
 2. Presiona `F5` o el botón ▶️ **Run**
 
 La API quedará disponible en:
-- https://localhost:7194/swagger ← interfaz visual para probar endpoints
-- https://localhost:7194/api/logins
+- https://localhost:7128/swagger ← interfaz visual para probar endpoints
+- https://localhost:7128/api/logins
 
 ## Flujo de Automatización al dar Play
 
@@ -233,7 +233,7 @@ Descarga un archivo CSV con el resumen de horas trabajadas por usuario.
 
 **Respuesta exitosa `200 OK`:** archivo `.csv` descargable.
 
-**Contenido del CSV:**
+**Contenido del CSV "Ejemplo":**
 
 | Login | Nombre Completo | Área | Total Horas Trabajadas |
 |---|---|---|---|
@@ -243,7 +243,7 @@ Descarga un archivo CSV con el resumen de horas trabajadas por usuario.
 
 ## Ejercicio 2 — Consultas SQL Server
 
-Los scripts completos están en la carpeta [`/SQLScripts`]
+Los scripts completos están en la carpeta [`/SQLScripts`](./SQLScripts/)
 
 ---
 

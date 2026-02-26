@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Text;
 using TestNuxibaAPI.Data;
 using TestNuxibaAPI.DTOs;
 using TestNuxibaAPI.Models;
-using System;
 
 namespace TestNuxibaAPI.Controllers
 {
@@ -158,6 +159,58 @@ namespace TestNuxibaAPI.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { mensaje = $"El registro con ID {id} fue eliminado exitosamente de la base de datos." });
+        }
+
+        /// Genera y descarga un reporte en CSV de las horas trabajadas por usuario.
+        [HttpGet("exportar-horas-csv")]
+        public async Task<IActionResult> ExportarHorasCsv()
+        {
+            var users = await _context.Users
+                .Include(u => u.Area)
+                .Include(u => u.Logins)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine("Nombre de usuario,Nombre completo,Area,Total de horas trabajadas");
+
+            foreach (var user in users)
+            {
+                string nombreCompleto = $"{user.Nombres} {user.ApellidoPaterno} {user.ApellidoMaterno}".Trim();
+
+                double totalSegundos = 0;
+                DateTime? ultimoLogin = null;
+
+                var movimientos = user.Logins.OrderBy(l => l.fecha).ToList();
+
+                foreach (var mov in movimientos)
+                {
+                    if (mov.TipoMov == 1) 
+                    {
+                        ultimoLogin = mov.fecha;
+                    }
+                    else if (mov.TipoMov == 0 && ultimoLogin.HasValue) 
+                    {
+                        totalSegundos += (mov.fecha - ultimoLogin.Value).TotalSeconds;
+                        ultimoLogin = null; 
+                    }
+                }
+
+                double totalHoras = totalSegundos / 3600.0;
+
+                string csvLogin = $"\"{user.Login}\"";
+                string csvNombre = $"\"{nombreCompleto}\"";
+                string csvArea = $"\"{user.Area?.AreaName ?? "Sin Área"}\"";
+
+                string csvHoras = totalHoras.ToString("F2");
+
+                sb.AppendLine($"{csvLogin},{csvNombre},{csvArea},{csvHoras}");
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+
+            return File(bytes, "text/csv", "Reporte_Horas_Trabajadas.csv");
         }
 
         //Helpers

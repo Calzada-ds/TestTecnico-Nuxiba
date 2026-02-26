@@ -137,7 +137,11 @@ namespace TestNuxibaAPI.Controllers
                 throw;
             }
 
-            return NoContent();
+            return Ok(new
+            {
+                mensaje = $"El registro con ID {id} se actualizó correctamente.",
+                datosActualizados = loginDto
+            });
         }
 
         /// Elimina un registro del sistema.
@@ -153,7 +157,7 @@ namespace TestNuxibaAPI.Controllers
             _context.Logins.Remove(login);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { mensaje = $"El registro con ID {id} fue eliminado exitosamente de la base de datos." });
         }
 
         //Helpers
@@ -164,16 +168,15 @@ namespace TestNuxibaAPI.Controllers
 
         private async Task<(bool userExists, Login? ultimoMovimiento)> GetUserAndLastMovAsync(int userId)
         {
-            var userExistsTask = _context.Users.AnyAsync(u => u.User_id == userId);
-            var ultimoMovTask = _context.Logins
+            var userExists = await _context.Users.AnyAsync(u => u.User_id == userId);
+
+            var ultimoMovimiento = await _context.Logins
                 .AsNoTracking()
                 .Where(l => l.User_id == userId)
                 .OrderByDescending(l => l.fecha)
                 .FirstOrDefaultAsync();
 
-            await Task.WhenAll(userExistsTask, ultimoMovTask);
-
-            return (await userExistsTask, await ultimoMovTask);
+            return (userExists, ultimoMovimiento);
         }
     }
 }

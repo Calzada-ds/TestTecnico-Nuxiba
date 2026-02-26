@@ -248,7 +248,7 @@ Los scripts completos están en la carpeta [`/SQLScripts`]
 ---
 
 ### Query 1 — Usuario con MÁS tiempo logueado
-[`SQLScripts/01_usuario_mas_logueado.sql`](./SQL/01_usuario_mas_logueado.sql)
+[`SQLScripts/01_usuario_mas_logueado.sql`](./SQLScripts/01_usuario_mas_logueado.sql)
 
 Usa `LEAD()` con `PARTITION BY User_id` para emparejar cada Login con su Logout
 siguiente y suma el tiempo total por usuario, mostrando el resultado en formato legible.
@@ -261,7 +261,7 @@ User_id: 92 | Tiempo total: 361 días, 12 horas, 51 minutos, 8 segundos
 ---
 
 ### Query 2 — Usuario con MENOS tiempo logueado
-[`SQLScripts/02_usuario_menos_logueado.sql`](./SQL/02_usuario_menos_logueado.sql)
+[`SQLScripts/02_usuario_menos_logueado.sql`](./SQLScripts/02_usuario_menos_logueado.sql)
 
 Misma lógica que la Query 1 pero ordenando de forma ascendente para obtener
 el usuario con menor tiempo acumulado de sesión.
@@ -274,7 +274,7 @@ User_id: 90 | Tiempo total: 244 días, 43 minutos, 15 segundos
 ---
 
 ### Query 3 — Promedio de logueo por mes
-[`SQLScripts/03_promedio_por_mes.sql`](./SQL/03_promedio_por_mes.sql)
+[`SQLScripts/03_promedio_por_mes.sql`](./SQLScripts/03_promedio_por_mes.sql)
 
 Calcula el promedio de duración de sesión por usuario agrupado por mes y año.
 

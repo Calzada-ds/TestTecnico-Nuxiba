@@ -36,7 +36,6 @@
     <Folder Include="bin\Debug\net8.0\" />
     <Folder Include="bin\Release\net8.0\" />
     <Folder Include="Data\" />
-    <Folder Include="Models\" />
     <Folder Include="obj\Debug\net8.0\refint\" />
     <Folder Include="obj\Debug\net8.0\ref\" />
     <Folder Include="obj\Debug\net8.0\staticwebassets\" />
